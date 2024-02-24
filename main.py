@@ -1,13 +1,10 @@
 import argparse
 from PIL import Image
-from stegano import lsb
 import piexif
 import re
 import base64
-# def print_image_dimensions(image_path):
-#     with Image.open(image_path) as img:
-#         width, height = img.size
-#         print(f"Dimensions: {width} x {height}")
+from modules.decode_encode import decode_message
+from modules.decode_encode import encode_message
 
 
 def extract_pgp_key(image_path):
@@ -46,32 +43,7 @@ def GPSInfo_to_coordinates(gps_info):
     # This is just a placeholder function. It doesn't actually parse the GPSInfo
     return "(13.731) / (-1.1373)"
 
-def extract_hidden_text(image_path):
-    img = Image.open(image_path)
-    binary_data = ""
-    for pixel in img.getdata():
-        for color in pixel[:3]:  # Assuming RGB
-            binary_data += str(color & 1)
-    binary_data = [binary_data[i:i+8] for i in range(0, len(binary_data), 8)]
-    
-    message_bytes = []
-    for byte in binary_data:
-        message_bytes.append(int(byte, 2))
-        if message_bytes[-1] == 0:  # Null byte indicates end of message
-            message_bytes.pop()  # Remove the null byte and stop
-            break
-    
-    # Convert bytes to string
-    message = bytes(message_bytes).decode('utf-8', errors='ignore')
-    
-    # Attempt Base64 decoding
-    try:
-        message = base64.b64decode(message).decode('utf-8')
-        print("Base64 decoding successful.")
-    except Exception as e:
-        print("Base64 decoding failed, returning raw message.")
-    
-    return message
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Image Inspector")
@@ -79,27 +51,38 @@ def parse_args():
     parser.add_argument("image", help="Path to the image file")
     parser.add_argument("-map", action="store_true", help="Extract location data from image")
     parser.add_argument("-steg", action="store_true", help="Extract hidden PGP key from image")
-    parser.add_argument("-text", action="store_true", help="Extract hidden text from image")
+    parser.add_argument("-decode", action="store_true", help="Decode a message from the image")
+    parser.add_argument("-encode",action="store_true", help="Encode a message into the image")
+    parser.add_argument("-message", help="The message to encode", default=None)
     return parser.parse_args()
 
 def main():
-    args = parse_args()
-    if args.map:
-        location = get_image_location(args.image)
-        print(f"Lat/Lon: {location}")
-    elif args.steg:
-        pgp_key = extract_pgp_key(args.image)
-        print(pgp_key)
-    else:
-        print("No valid operation specified. Use -map for location or -steg for PGP key extraction.")
+        args = parse_args()
+         # Check for -map flag
+        if args.map:
+            location = get_image_location(args.image)
+            print(f"Lat/Lon: {location}")
+    
+        if args.steg:
+          pgp_key = extract_pgp_key(args.image)
+          print(pgp_key)
 
-    if args.text:
-        hidden_text = extract_hidden_text(args.image)
-        if hidden_text:
-            print("Hidden text found:")
-            print(hidden_text)
-        else:
-            print("No hidden text found in the image.")
+        if args.decode:  
+            message = decode_message(args.image)
+            print(f"Hidden message: {message}")
+
+        if args.encode:
+        # Assuming you have corrected the logic to use -message for the text to encode
+        # And you handle output image naming inside your encode_message function
+            message = args.message
+            encode_message_result = encode_message(args.image, message)
+            print(encode_message_result)
+
+        # If no operation was specified
+        if not (args.map or args.steg or args.decode or args.encode):
+            print("No valid operation specified. Use -map, -steg, -decode, or -encode.")
+
+
 
 
 
