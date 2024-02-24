@@ -39,7 +39,7 @@ The tool is executed from the command line, with different flags specifying the 
   ```
 - **Decoding a Message**:
   ```sh
-  python main.py -decode image.png
+  python main.py -decode encoded_image.png
   ```
 - **Extracting PGP Key**:
   ```sh
