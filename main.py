@@ -21,7 +21,7 @@ def main():
         args = parse_args()
         if args.map:
             location = get_image_location(args.image)
-            print(f"Lat/Long: {location}")
+            print("Latitude:", location[0], "\nLongitude:", location[1])
     
         if args.steg:
           pgp_key = extract_pgp_key(args.image)

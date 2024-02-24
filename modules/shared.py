@@ -62,18 +62,21 @@ def GPSInfo_to_coordinates(gps_info):
     lat_readable = decimal_to_dms(lat_decimal, 'Latitude')
     lon_readable = decimal_to_dms(lon_decimal, 'Longitude')
 
-    return lat_readable, lon_readable
+    return lat_readable,lon_readable
 
 def get_image_location(image_path):
-    img = Image.open(image_path)
-    exif_dict = piexif.load(img.info['exif'])
+    try:
+        img = Image.open(image_path)
+        exif_dict = piexif.load(img.info.get('exif', {}))  # Use .get to avoid KeyError
 
-    if not exif_dict:
-        return "No EXIF data found"
-    
-    gps_info = exif_dict.get('GPS')
-    if gps_info:
-        coordinates = GPSInfo_to_coordinates(gps_info)
-        return coordinates
-    else:
-        return "No GPS data found"
+        if not exif_dict:
+            return None, "No EXIF data found"
+        
+        gps_info = exif_dict.get('GPS')
+        if gps_info:
+            coordinates = GPSInfo_to_coordinates(gps_info)
+            return coordinates
+        else:
+            return None, "No GPS data found"
+    except Exception as e:
+        return None, str(e)  # Return the error message

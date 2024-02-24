@@ -1,14 +1,21 @@
 import tkinter as tk
 import requests
 from io import BytesIO
-import webbrowser
+import folium
+import re
+import os
 from tkinter import filedialog, messagebox, Text, Scrollbar
 from PIL import Image, ImageTk
+import configparser
+from pathlib import Path
 from decode_encode import encode_message, decode_message
-from shared import get_image_location, extract_pgp_key  # Ensure correct import paths
+from shared import get_image_location, extract_pgp_key, get_decimal_from_dms  # Ensure correct import paths
 
 class ImageInspectorApp:
     def __init__(self, root):
+        super().__init__()
+        self.api_key = ""
+        self.load_api_key()
         self.root = root
         self.root.title("Image Inspector Tool")
 
@@ -42,7 +49,7 @@ class ImageInspectorApp:
         tk.Button(self.left_frame, text="Encode Message", command=self.encode).pack(anchor='nw')
         tk.Button(self.left_frame, text="Decode Message", command=self.decode).pack(anchor='nw')
         tk.Button(self.left_frame, text="Extract GPS Location", command=self.extract_gps).pack(anchor='nw')
-        #tk.Button(self.left_frame, text="Extract PGP Key", command=self.extract_pgp).pack(anchor='nw')
+        tk.Button(self.left_frame, text="Extract PGP Key", command=self.extract_pgp).pack(anchor='nw')
 
         # Output Text Widget
         self.output_text = Text(self.right_frame, wrap="word")
@@ -53,7 +60,12 @@ class ImageInspectorApp:
         self.output_text['yscrollcommand'] = scrollbar.set
         scrollbar.pack(side='right', fill='y')
     
-    
+    def load_api_key(self):
+        config = configparser.ConfigParser()
+        # Construct the path to the configuration file
+        config_file_path = os.path.join(os.path.dirname(__file__), '..', 'config.ini')
+        config.read(config_file_path)
+        self.api_key = config['Geoapify']['api_key']
 
     def select_image(self):
         file_path = filedialog.askopenfilename()
@@ -64,16 +76,17 @@ class ImageInspectorApp:
 
     def display_image(self, file_path):
         img = Image.open(file_path)
-        img.thumbnail((400, 400))  # Adjust size as needed
-        img = ImageTk.PhotoImage(img)
+        img.thumbnail((200, 200))  # Adjust size as needed
+        img_tk = ImageTk.PhotoImage(img)
 
-        if hasattr(self, 'image_label'):
-            self.image_label.configure(image=img)  # Update existing label
+        if hasattr(self, 'image_preview_label'):
+            self.image_preview_label.configure(image=img_tk)
         else:
-            self.image_label = tk.Label(self.left_frame, image=img)  # Create new label if it doesn't exist
-            self.image_label.pack()
+            self.image_preview_label = tk.Label(self.left_frame, image=img_tk)
+            self.image_preview_label.pack()
 
-            self.image_label.image = img  # Keep a reference
+        # Keep a reference to the new image to prevent garbage-collection
+        self.image_preview_label.image = img_tk
 
     def encode(self):
         image_path = self.entry_image_path.get()
@@ -94,43 +107,68 @@ class ImageInspectorApp:
         else:
             messagebox.showerror("Error", "Image path is required.")
 
+    def parse_dms_to_tuple(self, dms_str):
+        # Extract degrees, minutes, seconds, and direction from the DMS string
+        match = re.match(r"(\d+)° (\d+)' ([\d.]+)\" ([NSEW])", dms_str)
+        if match:
+            degrees, minutes, seconds, direction = match.groups()
+         # Convert degrees, minutes, and seconds to numeric values
+            dms_tuple = ((int(degrees), 1), (int(minutes), 1), (float(seconds), 1))
+            return dms_tuple, direction
+        return None, None
+
+    
     def extract_gps(self):
         image_path = self.entry_image_path.get()
         if image_path:
-            location = get_image_location(image_path)
-            if location:
-                lat, lon = location  # Assuming get_image_location returns a tuple (lat, lon)
-                self.show_map(lat, lon)
+            location_str = get_image_location(image_path)
+            if location_str:
+                # Extract numeric values and direction reference from DMS strings
+                lat_str, lon_str = location_str
+                lat_dms, lat_ref = self.parse_dms_to_tuple(lat_str)
+                lon_dms, lon_ref = self.parse_dms_to_tuple(lon_str)
+
+                # Convert DMS to decimal degrees using the shared function
+                lat_decimal = get_decimal_from_dms(lat_dms, lat_ref)
+                lon_decimal = get_decimal_from_dms(lon_dms, lon_ref)
+
+                if lat_decimal is not None and lon_decimal is not None:
+                    self.show_map(lat_decimal, lon_decimal)
+                    
+                else:
+                    messagebox.showinfo("GPS Location", "Invalid GPS data format.", message="Invalid GPS data format.")
             else:
-                messagebox.showinfo("GPS Location", "No GPS data found or invalid location.")
+                messagebox.showinfo("GPS Location", "No GPS data found.")
         else:
             messagebox.showerror("Error", "Image path is required.")
-
-    def get_static_map_image(self, lat, lon):
-        # Construct the request URL
-        url = f"https://nominatim.openstreetmap.org/search?q={lat},{lon}&format=json"
-    
-        # Make the request
-        response = requests.get(url, headers={"User-Agent": "mozilla/5.0"})
-        if response.status_code == 200:
-            # Convert the response content into an image
-            image_data = BytesIO(response.content)
-            img = Image.open(image_data)
-            return ImageTk.PhotoImage(img)
-        else:
-            return None
         
     def show_map(self, lat, lon):
-        img = self.get_static_map_image(lat, lon)
-        if img:
-            if hasattr(self, 'map_label'):
-                self.map_label.configure(image=img)
+        api_key = self.api_key  # Replace with your actual Geoapify API key
+        # Construct the request URL for Geoapify Static Maps API
+        url = f"https://maps.geoapify.com/v1/staticmap?style=osm-bright-smooth&width=400&height=400&center=lonlat:{lon},{lat}&zoom=10&marker=lonlat:{lon},{lat};type:awesome;color:%23ff0000;size:medium&apiKey={api_key}"
+    
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+             # Convert the response content into an image
+                image_data = BytesIO(response.content)
+                img = Image.open(image_data)
+                img_tk = ImageTk.PhotoImage(img)
+            
+                # Display the image in the Tkinter window
+                if hasattr(self, 'map_label'):
+                    self.map_label.configure(image=img_tk)
+                    self.map_label.image = img_tk  # Keep a reference to prevent garbage-collection
+                else:
+                    self.map_label = tk.Label(self.right_frame, image=img_tk)
+                    self.map_label.pack()
+
+                self.map_label.image = img_tk  # Keep a reference to prevent garbage-collection
             else:
-                self.map_label = tk.Label(self.right_frame, image=img)
-                self.map_label.image = img  # Keep a reference!
-                self.map_label.pack()
-        else:
-            messagebox.showerror("Error", "Could not retrieve map image.")
+                messagebox.showerror("Error", "Failed to retrieve the map image.")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to display map: {e}")
+
 
     def extract_pgp(self):
         image_path = self.entry_image_path.get()
