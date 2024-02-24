@@ -12,6 +12,10 @@ The Image Inspector tool is a versatile Python application designed for steganog
   - [Decoding a Message](#decoding-a-message)
   - [Extracting PGP Key](#extracting-pgp-key)
   - [Extracting Geolocation Data](#extracting-geolocation-data)
+- [GUI Interface](#gui-interface)
+  - [Obtaining a Geoapify API Key](#obtaining-a-geoapify-api-key)
+  - [Configuring the Application](#configuring-the-application)
+  - [Running the GUI](#running-the-gui)
 - [Disclaimer](#disclaimer)
 - [Challenges and Solutions](#challenges-and-solutions)
 - [Contribution](#contribution)
@@ -80,6 +84,38 @@ python main.py -map image.jpeg
 ```
 
 Replace `image.png` with the path to your target image.
+
+## GUI Interface
+
+The Image Inspector tool also features a graphical user interface (GUI) to provide an interactive and user-friendly way to utilize its functionalities. The GUI supports all core features, including encoding and decoding messages, extracting PGP keys, and displaying geolocation data on a map.
+
+### Obtaining a Geoapify API Key
+
+To use the geolocation extraction feature and display maps within the GUI, you need a Geoapify API key. Follow these steps to obtain a free API key:
+
+1. Visit [Geoapify](https://www.geoapify.com/) and sign up for an account.
+2. Once logged in, navigate to your Dashboard and create a new API key.
+3. Choose a plan that suits your needs. The free tier should be sufficient for basic usage and testing.
+
+Remember to keep your API key private and secure.
+
+### Configuring the Application
+
+Before running the GUI or command-line tool, you need to configure your application with your Geoapify API key. This is done by modifying the `config.ini` file located in the root directory of the project:
+
+1. Locate the `config.example.ini` file in the project root.
+2. Copy this file and rename the copy to `config.ini`.
+3. Open `config.ini` in a text editor and replace `your_api_key_here` with your actual Geoapify API key under the `[Geoapify]` section.
+
+**Note:** The `config.ini` file is ignored by Git to prevent your API key from being accidentally pushed to public repositories. Always ensure that your API key is kept secure and not disclosed in shared or public spaces.
+
+## Running the GUI
+
+To launch the graphical user interface, navigate to the project directory in your terminal and run the following command:
+
+```sh
+python modules/gui.py
+The GUI window will open, allowing you to access all the functionalities of the Image Inspector tool interactively. Ensure you have configured the config.ini file with your Geoapify API key to use the geolocation feature.
 
 ## Disclaimer
 
