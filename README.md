@@ -115,6 +115,7 @@ To launch the graphical user interface, navigate to the project directory in you
 
 ```sh
 python modules/gui.py
+```
 The GUI window will open, allowing you to access all the functionalities of the Image Inspector tool interactively. Ensure you have configured the config.ini file with your Geoapify API key to use the geolocation feature.
 
 ## Disclaimer
