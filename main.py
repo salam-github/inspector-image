@@ -64,7 +64,7 @@ def GPSInfo_to_coordinates(gps_info):
     lat_readable = decimal_to_dms(lat_decimal, 'Latitude')
     lon_readable = decimal_to_dms(lon_decimal, 'Longitude')
 
-    return f"{lat_readable}\n{lon_readable}"
+    return f"Latitude: {lat_readable}\nLongitude: {lon_readable}"
 
 def get_image_location(image_path):
     img = Image.open(image_path)
@@ -97,7 +97,7 @@ def main():
         args = parse_args()
         if args.map:
             location = get_image_location(args.image)
-            print(f"Lat/Lon: {location}")
+            print(location)
     
         if args.steg:
           pgp_key = extract_pgp_key(args.image)
