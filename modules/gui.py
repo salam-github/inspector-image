@@ -1,11 +1,11 @@
 import tkinter as tk
 import requests
 from io import BytesIO
-import folium
 import re
 import os
 from tkinter import filedialog, messagebox, Text, Scrollbar
 from PIL import Image, ImageTk
+import tkinter.simpledialog as simpledialog
 import configparser
 from pathlib import Path
 from decode_encode import encode_message, decode_message
@@ -41,9 +41,9 @@ class ImageInspectorApp:
         tk.Button(self.left_frame, text="Select Image", command=self.select_image).pack(anchor='nw')
 
         # Message entry
-        tk.Label(self.left_frame, text="Message:").pack(anchor='nw')
-        self.entry_message = tk.Entry(self.left_frame, width=50)
-        self.entry_message.pack(anchor='nw')
+        # tk.Label(self.left_frame, text="Message:").pack(anchor='nw')
+        # self.entry_message = tk.Entry(self.left_frame, width=50)
+        # self.entry_message.pack(anchor='nw')
 
         # Operation buttons
         tk.Button(self.left_frame, text="Encode Message", command=self.encode).pack(anchor='nw')
@@ -63,15 +63,17 @@ class ImageInspectorApp:
     def load_api_key(self):
         config = configparser.ConfigParser()
         # Construct the path to the configuration file
-        config_file_path = os.path.join(os.path.dirname(__file__), '..', 'config.ini')
+        config_file_path = os.path.join(os.path.dirname(__file__), '..', 'config1.ini')
         config.read(config_file_path)
         self.api_key = config['Geoapify']['api_key']
 
     def select_image(self):
         file_path = filedialog.askopenfilename()
         if file_path:
+         self.clear_gui_elements()  # Clear the output and map if they exist
          self.entry_image_path.delete(0, tk.END)
          self.entry_image_path.insert(0, file_path)
+
          self.display_image(file_path)  # Call display_image to show the image
 
     def display_image(self, file_path):
@@ -90,17 +92,22 @@ class ImageInspectorApp:
 
     def encode(self):
         image_path = self.entry_image_path.get()
-        message = self.entry_message.get()
-        if image_path and message:
-            result = encode_message(image_path, message)  # Adjusted to class method call
-            self.output_text.delete('1.0', tk.END)  # Clear existing output
-            self.output_text.insert(tk.END, "Encode Result:\n" + result)
+        if image_path:
+         # Prompt for the message using a dialog
+            message = simpledialog.askstring("Encode Message", "Enter the message to encode:")
+            if message:
+                result = encode_message(image_path, message)  # Proceed with encoding
+                self.output_text.delete('1.0', tk.END)  # Clear existing output
+                self.output_text.insert(tk.END, "Encode Result:\n" + result)
+            else:
+             messagebox.showinfo("Encode Message", "Encoding cancelled or no message entered.")
         else:
-            messagebox.showerror("Error", "Image path and message are required.")
+            messagebox.showerror("Error", "Image path is required.")
 
     def decode(self):
         image_path = self.entry_image_path.get()
         if image_path:
+            self.clear_map_display()  # Clear the map if it exists
             message = decode_message(image_path)  # Adjusted to class method call
             self.output_text.delete('1.0', tk.END)  # Clear existing output
             self.output_text.insert(tk.END, "Decoded Message:\n" + message)
@@ -156,12 +163,13 @@ class ImageInspectorApp:
                 img_tk = ImageTk.PhotoImage(img)
             
                 # Display the image in the Tkinter window
-                if hasattr(self, 'map_label'):
+                if hasattr(self, 'map_label') and self.map_label.winfo_exists():
                     self.map_label.configure(image=img_tk)
                     self.map_label.image = img_tk  # Keep a reference to prevent garbage-collection
                 else:
                     self.map_label = tk.Label(self.right_frame, image=img_tk)
                     self.map_label.pack()
+                    self.output_text.insert(tk.END, f"Latitude: {lat}\nLongitude: {lon}\n")
 
                 self.map_label.image = img_tk  # Keep a reference to prevent garbage-collection
             else:
@@ -173,11 +181,26 @@ class ImageInspectorApp:
     def extract_pgp(self):
         image_path = self.entry_image_path.get()
         if image_path:
+            self.clear_map_display()  # Clear the map if it exists
             pgp_key = extract_pgp_key(image_path)  # Adjusted to class method call
             self.output_text.delete('1.0', tk.END)  # Clear existing output
             self.output_text.insert(tk.END, "PGP Key:\n" + pgp_key)
         else:
             messagebox.showerror("Error", "Image path is required.")
+
+    def clear_gui_elements(self):
+        # Clear output text where PGP keys, maps, or messages are displayed
+        self.output_text.delete('1.0', tk.END)
+    
+        # Remove the map image if it exists
+        if hasattr(self, 'map_label') and self.map_label.winfo_exists():
+            self.map_label.destroy()
+
+    def clear_map_display(self):
+     # Check if the map_label exists and is displayed, then hide or destroy it
+        if hasattr(self, 'map_label') and self.map_label.winfo_exists():
+            self.map_label.destroy()  # Or, self.map_label.pack_forget() to hide without destroying
+            del self.map_label  # Remove the attribute reference if destroyed
 
 # Initialize and run the app
 if __name__ == "__main__":
