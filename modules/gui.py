@@ -7,28 +7,32 @@ from tkinter import filedialog, messagebox, Text, Scrollbar
 from PIL import Image, ImageTk
 import tkinter.simpledialog as simpledialog
 import configparser
-from pathlib import Path
+# from pathlib import Path
 from decode_encode import encode_message, decode_message
 from shared import get_image_location, extract_pgp_key, get_decimal_from_dms  # Ensure correct import paths
 
-class ImageInspectorApp:
-    def __init__(self, root):
+class ImageInspectorApp(tk.Tk):
+    def __init__(self):
         super().__init__()
+        self.title("Image Inspector Tool")
         self.api_key = ""
         self.load_api_key()
-        self.root = root
-        self.root.title("Image Inspector Tool")
+        self.minsize(200, 600)
 
         # Setup frames
-        self.left_frame = tk.Frame(self.root, width=200, height=400)
+        self.left_frame = tk.Frame(self, width=200, height=400)
         self.left_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
 
-        self.right_frame = tk.Frame(self.root, width=400, height=400)
-        self.right_frame.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
+        self.center_frame = tk.Frame(self, width=200, height=400)  # Center frame for buttons
+        self.center_frame.grid(row=0, column=1, padx=10, pady=10, sticky="ns")
 
-        self.root.grid_columnconfigure(1, weight=1)
-        self.root.grid_rowconfigure(0, weight=1)
-        self.root.minsize(800, 400)
+        self.right_frame = tk.Frame(self, width=200, height=400)
+        self.right_frame.grid(row=0, column=2, sticky="nsew", padx=10, pady=10)
+
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(2, weight=3)
+        
 
         # Setup widgets
         self.setup_widgets()
@@ -38,27 +42,25 @@ class ImageInspectorApp:
         tk.Label(self.left_frame, text="Image Path:").pack(anchor='nw')
         self.entry_image_path = tk.Entry(self.left_frame, width=50)
         self.entry_image_path.pack(anchor='nw')
-        tk.Button(self.left_frame, text="Select Image", command=self.select_image).pack(anchor='nw')
+        tk.Button(self.left_frame, text="Select Image", command=self.select_image).pack(anchor='nw', pady=(0, 20))
 
-        # Message entry
-        # tk.Label(self.left_frame, text="Message:").pack(anchor='nw')
-        # self.entry_message = tk.Entry(self.left_frame, width=50)
-        # self.entry_message.pack(anchor='nw')
+        # Operation buttons now in the center frame
+        tk.Button(self.center_frame, text="Encode Message", command=self.encode).pack(anchor='center', pady=5)
+        tk.Button(self.center_frame, text="Decode Message", command=self.decode).pack(anchor='center', pady=5)
+        tk.Button(self.center_frame, text="Extract GPS Location", command=self.extract_gps).pack(anchor='center', pady=5)
+        tk.Button(self.center_frame, text="Extract PGP Key", command=self.extract_pgp).pack(anchor='center', pady=5)
 
-        # Operation buttons
-        tk.Button(self.left_frame, text="Encode Message", command=self.encode).pack(anchor='nw')
-        tk.Button(self.left_frame, text="Decode Message", command=self.decode).pack(anchor='nw')
-        tk.Button(self.left_frame, text="Extract GPS Location", command=self.extract_gps).pack(anchor='nw')
-        tk.Button(self.left_frame, text="Extract PGP Key", command=self.extract_pgp).pack(anchor='nw')
+        # Output Text Widget in the right frame
+        self.text_frame = tk.Frame(self.right_frame)
+        self.text_frame.pack(fill="both", expand=True)
 
-        # Output Text Widget
-        self.output_text = Text(self.right_frame, wrap="word")
-        self.output_text.pack(expand=True, fill='both')
+        self.output_text = Text(self.text_frame, wrap="word")
+        self.output_text.pack(side="left", fill="both", expand=True)
 
-        # Scrollbar for Text Widget
-        scrollbar = Scrollbar(self.output_text, command=self.output_text.yview)
-        self.output_text['yscrollcommand'] = scrollbar.set
-        scrollbar.pack(side='right', fill='y')
+        scrollbar = Scrollbar(self.text_frame, command=self.output_text.yview)
+        scrollbar.pack(side="right", fill="y")
+
+        self.output_text.config(yscrollcommand=scrollbar.set)
     
     def load_api_key(self):
         config = configparser.ConfigParser()
@@ -204,6 +206,6 @@ class ImageInspectorApp:
 
 # Initialize and run the app
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = ImageInspectorApp(root)
-    root.mainloop()
+    # root = tk.Tk()
+    app = ImageInspectorApp()
+    app.mainloop()
