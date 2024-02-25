@@ -3,6 +3,7 @@ from modules.decode_encode import decode_message
 from modules.decode_encode import encode_message
 from modules.shared import get_image_location
 from modules.shared import extract_pgp_key
+from modules.shared import get_image_exif
 
 
 
@@ -14,6 +15,7 @@ def parse_args():
     parser.add_argument("-steg", action="store_true", help="Extract hidden PGP key from image")
     parser.add_argument("-decode", action="store_true", help="Decode a message from the image")
     parser.add_argument("-encode",action="store_true", help="Encode a message into the image")
+    parser.add_argument("-exif",action="store_true", help="Extract all EXIF data from the image")
     parser.add_argument("-message", help="The message to encode", default=None)
     return parser.parse_args()
 
@@ -35,6 +37,10 @@ def main():
             message = args.message
             encode_message_result = encode_message(args.image, message)
             print(encode_message_result)
+
+        if args.exif:
+            exif_data = get_image_exif(args.image)
+            print(f"EXIF data: {exif_data}")
 
         # If no operation was specified
         if not (args.map or args.steg or args.decode or args.encode):
