@@ -1,6 +1,6 @@
 import os
 import piexif
-from PIL import Image
+from PIL import Image, ExifTags
 
 
 def extract_pgp_key(image_path):
@@ -80,3 +80,36 @@ def get_image_location(image_path):
             return None, "No GPS data found"
     except Exception as e:
         return None, str(e)  # Return the error message
+    
+def get_image_exif(image_path):
+    img = Image.open(image_path)
+    exif_data = img._getexif()
+
+    if not exif_data:
+        return "No EXIF data found."
+
+    tags = {ExifTags.TAGS[k]: v for k, v in exif_data.items() if k in ExifTags.TAGS}
+
+    desired_tags = [
+        'DateTimeOriginal', 'Make', 'Model', 'LensModel', 'GPSAltitude',
+        'Software', 'RunTimeSincePowerUp', 'FocalLength', 'FNumber', 'ExposureTime',
+        'ISOSpeedRatings', 'ExposureBiasValue', 'ExposureProgram', 'MeteringMode',
+        'Flash', 'FocalLengthIn35mmFilm', 'SceneCaptureType', 'Contrast', 'Saturation',
+        'Sharpness', 'SubjectDistanceRange', 'ExposureMode', 'WhiteBalance', 'GainControl',
+        'LightSource', 'SensingMethod', 'ExposureIndex', 'FileSource', 'SceneType',
+        'CustomRendered', 'DigitalZoomRatio'
+    ]
+
+    found_data = False  # Flag to track if any data is found
+    exif_str = ""
+    for tag in desired_tags:
+        if tag in tags:
+            exif_str += f"{tag}: {tags[tag]}\n"
+            found_data = True
+
+    if not found_data:
+        return "No EXIF data found for the desired tags."
+    else:
+        exif_str += "No other data was found."  # This line can be adjusted based on what you want to convey
+
+    return exif_str

@@ -9,7 +9,7 @@ import tkinter.simpledialog as simpledialog
 import configparser
 # from pathlib import Path
 from decode_encode import encode_message, decode_message
-from shared import get_image_location, extract_pgp_key, get_decimal_from_dms  # Ensure correct import paths
+from shared import get_image_location, extract_pgp_key, get_decimal_from_dms, get_image_exif 
 
 class ImageInspectorApp(tk.Tk):
     def __init__(self):
@@ -49,6 +49,7 @@ class ImageInspectorApp(tk.Tk):
         tk.Button(self.center_frame, text="Decode Message", command=self.decode).pack(anchor='center', pady=5)
         tk.Button(self.center_frame, text="Extract GPS Location", command=self.extract_gps).pack(anchor='center', pady=5)
         tk.Button(self.center_frame, text="Extract PGP Key", command=self.extract_pgp).pack(anchor='center', pady=5)
+        tk.Button(self.center_frame, text="Show EXIF Data", command=self.show_exif_data).pack(anchor='center', pady=5)
 
         # Output Text Widget in the right frame
         self.text_frame = tk.Frame(self.right_frame)
@@ -201,8 +202,18 @@ class ImageInspectorApp(tk.Tk):
     def clear_map_display(self):
      # Check if the map_label exists and is displayed, then hide or destroy it
         if hasattr(self, 'map_label') and self.map_label.winfo_exists():
-            self.map_label.destroy()  # Or, self.map_label.pack_forget() to hide without destroying
+            self.map_label.destroy() 
             del self.map_label  # Remove the attribute reference if destroyed
+
+    def show_exif_data(self):
+        image_path = self.entry_image_path.get()
+        if image_path:
+            exif_data = get_image_exif(image_path)
+            self.output_text.delete('1.0', tk.END)
+            self.output_text.insert(tk.END, exif_data)
+        else:
+            messagebox.showerror("Error", "Image path is required.")
+
 
 # Initialize and run the app
 if __name__ == "__main__":
