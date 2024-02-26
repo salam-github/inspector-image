@@ -201,7 +201,8 @@ class ImageInspectorApp(tk.Tk):
 
                 self.map_label.image = img_tk  # Keep a reference to prevent garbage-collection
             else:
-                messagebox.showerror("Error", "Failed to retrieve the map image.")
+                self.output_text.insert(tk.END, f"Latitude: {lat}\nLongitude: {lon}\n")
+                messagebox.showerror("Error", "Failed to retrieve the map image. check your API key and internet connection.")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to display map: {e}")
 
