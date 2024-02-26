@@ -36,15 +36,18 @@ def get_decimal_from_dms(dms, ref):
     return decimal_degrees
 
 def decimal_to_dms(decimal_degree, direction):
-    degrees = int(decimal_degree)
-    minutes_float = (decimal_degree - degrees) * 60
+    # Take the absolute value since direction determines the sign
+    decimal_degree_abs = abs(decimal_degree)
+    degrees = int(decimal_degree_abs)
+    minutes_float = (decimal_degree_abs - degrees) * 60
     minutes = int(minutes_float)
     seconds = (minutes_float - minutes) * 60
 
-    cardinal = 'N' if direction == 'Latitude' else 'E'
-    if degrees < 0:
-        cardinal = 'S' if direction == 'Latitude' else 'W'
-        degrees = degrees * -1  # Make positive for formatting
+    # Determine cardinal direction based on original value and specified direction
+    if direction == 'Latitude':
+        cardinal = 'N' if decimal_degree >= 0 else 'S'
+    else:  # Longitude
+        cardinal = 'E' if decimal_degree >= 0 else 'W'
 
     return f"{degrees}° {minutes}' {seconds:.2f}\" {cardinal}"
 
@@ -75,6 +78,7 @@ def get_image_location(image_path):
         gps_info = exif_dict.get('GPS')
         if gps_info:
             coordinates = GPSInfo_to_coordinates(gps_info)
+            print(f'GPS coordinates 1111: {coordinates}')
             return coordinates
         else:
             return None, "No GPS data found"

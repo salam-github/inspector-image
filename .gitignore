@@ -128,6 +128,10 @@ ENV/
 env.bak/
 venv.bak/
 
+# Virtual environment
+venv/
+inspector-image/
+
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -166,3 +170,12 @@ resources/IMG_2363.jpeg
 resources/IMG_1337.jpeg
 resources/IMG_0187.jpeg
 resources/IMG_0093.jpeg
+resources/IMG_0187.jpg
+resources/IMG_1204.jpg
+resources/IMG_1337.jpg
+resources/IMG_2033.jpg
+resources/IMG_2038.jpg
+resources/IMG_2065.jpg
+resources/IMG_3858.jpg
+resources/IMG_3961.JPG
+resources/IMG_5388.jpg
