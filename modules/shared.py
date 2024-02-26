@@ -1,6 +1,9 @@
-import os
 import piexif
 from PIL import Image, ExifTags
+import cv2
+import numpy as np
+from skimage.metrics import structural_similarity as ssim
+
 
 
 def extract_pgp_key(image_path):
@@ -78,7 +81,7 @@ def get_image_location(image_path):
         gps_info = exif_dict.get('GPS')
         if gps_info:
             coordinates = GPSInfo_to_coordinates(gps_info)
-            print(f'GPS coordinates 1111: {coordinates}')
+            #print(f'GPS coordinates 1111: {coordinates}')
             return coordinates
         else:
             return None, "No GPS data found"
@@ -117,3 +120,32 @@ def get_image_exif(image_path):
         exif_str += "No other data was found."  # This line can be adjusted based on what you want to convey
 
     return exif_str
+
+def compare_images(image_path_1, image_path_2):
+    # Load the two images
+    image1 = cv2.imread(image_path_1)
+    image2 = cv2.imread(image_path_2)
+
+    # Convert the images to grayscale
+    gray1 = cv2.cvtColor(image1, cv2.COLOR_BGR2GRAY)
+    gray2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
+
+    # Compute the Structural Similarity Index (SSI) between the two images
+    score, diff = ssim(gray1, gray2, full=True)
+    print("Image similarity:", score)
+
+    # Normalize the difference image for displaying
+    diff = (diff * 255).astype("uint8")
+    
+    # Threshold the diff image to get the contours of the differences
+    thresh = cv2.threshold(diff, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
+    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Draw the contours on the first image
+    result = image1.copy()
+    cv2.drawContours(result, contours, -1, (0,0,255), 2)
+
+    # Convert the OpenCV result image to a PIL.Image object for Tkinter
+    result_pil = Image.fromarray(cv2.cvtColor(result, cv2.COLOR_BGR2RGB))
+    
+    return result_pil, score

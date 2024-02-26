@@ -1,6 +1,6 @@
 # Image Inspector Tool
 
-The Image Inspector tool is a versatile Python application designed for steganography and metadata extraction from images. It allows users to encode hidden messages into images, decode messages from images, extract PGP keys hidden within images, and retrieve the geographical location where the photo was taken based on its metadata.
+The Image Inspector tool is a versatile Python application designed for steganography and metadata extraction from images. It allows users to encode hidden messages into images, decode messages from images, extract PGP keys hidden within images, dump relevant exif data and retrieve the geographical location where the photo was taken based on its metadata.
 
 ## Table of Contents
 - [Features](#features)
@@ -12,6 +12,7 @@ The Image Inspector tool is a versatile Python application designed for steganog
   - [Decoding a Message](#decoding-a-message)
   - [Extracting PGP Key](#extracting-pgp-key)
   - [Extracting Geolocation Data](#extracting-geolocation-data)
+  - [Extracting EXIF Data](#extracting-other-exif-data)
 - [GUI Interface](#gui-interface)
   - [Obtaining a Geoapify API Key](#obtaining-a-geoapify-api-key)
   - [Configuring the Application](#configuring-the-application)
@@ -53,12 +54,14 @@ To get started with the Image Inspector tool, clone the repository or download t
 
 The tool is executed from the command line, with different flags specifying the operation to be performed:
 
+Replace `image.png` with the path to your target image.
+
 ### Encoding a Message
 
 Encode a hidden message into an image. If the source image is in JPEG format, it will be automatically converted to PNG to ensure lossless data preservation during the encoding process. The output will be a PNG file, even if the input is JPEG.
 
 ```sh
-python main.py -encode -message "Your secret message" image.jpeg
+python main.py -encode -message "Your secret message" resources/image.jpeg
 ```
 
 **Note:** Due to the automatic conversion of JPEG images to PNG for encoding, remember to use the `.png` extension for the encoded file when attempting to decode or perform any further operations.
@@ -68,22 +71,25 @@ python main.py -encode -message "Your secret message" image.jpeg
 Decode the hidden message from an encoded image. Ensure you refer to the PNG file created during the encoding process, as JPEG inputs are converted to PNG for lossless data preservation.
 
 ```sh
-python main.py -decode encoded_image.png
+python main.py -decode resources/encoded_image.png
 ```
 
 ### Extracting PGP Key
 
 ```sh
-python main.py -steg image.jpeg
+python main.py -steg resources/image.jpeg
 ```
 
 ### Extracting Geolocation Data
 
 ```sh
-python main.py -map image.jpeg
+python main.py -map resources/image.jpeg
 ```
 
-Replace `image.png` with the path to your target image.
+### Extracting other EXIF Data
+```sh
+python main.py -exif resources/image.jpeg
+```
 
 ## GUI Interface
 
@@ -125,10 +131,6 @@ This tool is provided for educational and research purposes only. The use of the
 ## Challenges and Solutions
 
 During the development, we encountered challenges with JPEG images due to their lossy compression, which could potentially alter or remove the hidden data. To address this, the tool automatically converts JPEG images to PNG format before encoding the message. This ensures the integrity of the hidden data, leveraging PNG's lossless compression. While this adds a step in processing JPEG images, it significantly enhances the tool's reliability and broadens its applicability across different image formats.
-
-## Contribution
-
-Contributions to the Image Inspector tool are welcome. Please feel free to fork the repository, make improvements, and submit pull requests.
 
 ## License
 
