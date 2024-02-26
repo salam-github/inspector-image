@@ -43,7 +43,7 @@ def main():
             print(f"EXIF data: {exif_data}")
 
         # If no operation was specified
-        if not (args.map or args.steg or args.decode or args.encode):
+        if not (args.map or args.steg or args.decode or args.encode or args.exif):
             print("No valid operation specified. Use -map, -steg, -decode, or -encode.")
 
 if __name__ == "__main__":

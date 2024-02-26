@@ -29,6 +29,10 @@ The Image Inspector tool is a versatile Python application designed for steganog
 - **Decode Messages**: Extract hidden messages from images.
 - **Extract PGP Keys**: Retrieve PGP keys embedded within images.
 - **Geolocation Extraction**: Determine the geographical location where an image was taken using its EXIF metadata.
+- **EXIF Data Extraction**: Dump all relevant EXIF metadata from an image.
+- **Image Comarison**: Compare two images and determine if they are similar. [Detailed Comparison README](modules/comparison.md).
+- **Graphical User Interface (GUI)**: A user-friendly interface for easy access to all functionalities.
+
 
 ## Prerequisites
 
