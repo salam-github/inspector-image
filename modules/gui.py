@@ -44,11 +44,6 @@ class ImageInspectorApp(tk.Tk):
         self.entry_image_path.pack(anchor='nw')
         tk.Button(self.left_frame, text="Select Image", command=self.select_image).pack(anchor='nw', pady=(0, 20))
 
-        # tk.Label(self.left_frame, text="Image Path",).pack(anchor='nw')
-        # self.second_image_path = tk.Entry(self.left_frame, width=20)
-        # self.second_image_path.pack(anchor='nw')
-        # tk.Button(self.left_frame, text="Select Second Image", command=self.select_ssecond_image).pack(anchor='nw', pady=(0, 20))
-
         # Operation buttons now in the center frame
         tk.Button(self.center_frame, text="Encode Message", command=self.encode).pack(anchor='center', pady=5)
         tk.Button(self.center_frame, text="Decode Message", command=self.decode).pack(anchor='center', pady=5)
@@ -84,26 +79,6 @@ class ImageInspectorApp(tk.Tk):
 
          self.display_image(file_path)  # Call display_image to show the image
 
-    # def select_ssecond_image(self):
-    #     file_path1 = filedialog.askopenfilename()
-    #     if file_path1:
-    #      self.display_second_image(file_path1)  # Call display_image to show the image
-    #      self.second_image.path = file_path1
-
-    # def display_second_image(self, file_path1):
-    #     img = Image.open(file_path1)
-    #     img = self.correct_image_orientation(img)
-    #     img.thumbnail((300, 300))  # Adjust size as needed
-    #     img_tk = ImageTk.PhotoImage(img)
-
-    #     if hasattr(self, 'image_preview_label_2'):
-    #         self.image_preview_label_2.configure(image=img_tk)
-    #     else:
-    #         self.image_preview_label_2 = tk.Label(self.left_frame, image=img_tk)
-    #         self.image_preview_label_2.image = img_tk
-    #         self.image_preview_label_2.pack(side="bottom", pady=(20, 0))
-        
-    #     self.image_preview_label_2.image = img_tk  # Keep a reference to prevent garbage-collection
 
     def correct_image_orientation(self, img):
         try:
@@ -128,6 +103,9 @@ class ImageInspectorApp(tk.Tk):
         if not image_path_1:
             messagebox.showerror("Error", "First image not selected.")
             return
+        
+        # Display the second image
+        self.display_second_image(second_image_path)
 
         # Perform comparison
         result_image, score = compare_images(image_path_1, second_image_path)
@@ -166,6 +144,20 @@ class ImageInspectorApp(tk.Tk):
 
         # Keep a reference to the new image to prevent garbage-collection
         self.image_preview_label.image = img_tk
+
+    def display_second_image(self, image_path):
+        img = Image.open(image_path)
+        img = self.correct_image_orientation(img)  # Correct the image orientation if needed
+        img.thumbnail((300, 300))  # Adjust size as needed
+        img_tk = ImageTk.PhotoImage(img)
+
+        # Display or update the second image in the GUI
+        if hasattr(self, 'second_image_label'):
+            self.second_image_label.configure(image=img_tk)
+        else:
+            self.second_image_label = tk.Label(self.left_frame, image=img_tk)
+            self.second_image_label.pack(side="top", fill="both", expand=True)
+        self.second_image_label.image = img_tk  # Keep a reference to prevent garbage-collection
 
     def encode(self):
         image_path = self.entry_image_path.get()
@@ -288,6 +280,9 @@ class ImageInspectorApp(tk.Tk):
 
         if hasattr(self, 'comparison_result_label') and self.comparison_result_label.winfo_exists():
             self.comparison_result_label.destroy()
+
+        if hasattr(self, 'second_image_label') and self.second_image_label.winfo_exists():
+            self.second_image_label.destroy()
 
     def clear_map_display(self):
      # Check if the map_label exists and is displayed, then hide or destroy it
