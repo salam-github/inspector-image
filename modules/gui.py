@@ -16,6 +16,7 @@ class ImageInspectorApp(tk.Tk):
         self.title("Image Inspector Tool")
         self.api_key = ""
         self.zoom_level = ""
+        self.second_image_label = None #initialize second image label
         self.load_config()
         self.minsize(600, 600)
 
@@ -39,8 +40,8 @@ class ImageInspectorApp(tk.Tk):
 
     def setup_widgets(self):
         # Image path entry
-        tk.Label(self.left_frame, text="Image Path:").pack(anchor='nw')
-        self.entry_image_path = tk.Entry(self.left_frame, width=20)
+        self.image_path_var = tk.StringVar(self.left_frame)
+        self.entry_image_path = tk.Entry(self.left_frame, width=20, textvariable=self.image_path_var, state='readonly')
         self.entry_image_path.pack(anchor='nw')
         tk.Button(self.left_frame, text="Select Image", command=self.select_image).pack(anchor='nw', pady=(0, 20))
 
@@ -75,7 +76,7 @@ class ImageInspectorApp(tk.Tk):
         if file_path:
          self.clear_gui_elements()  # Clear the output and map if they exist
          self.entry_image_path.delete(0, tk.END)
-         self.entry_image_path.insert(0, file_path)
+         self.image_path_var.set(file_path)
 
          self.display_image(file_path)  # Call display_image to show the image
 
@@ -104,6 +105,18 @@ class ImageInspectorApp(tk.Tk):
             messagebox.showerror("Error", "First image not selected.")
             return
         
+        # Check if the images have the same dimensions
+        img1 = Image.open(image_path_1)
+        img2 = Image.open(second_image_path)
+        if img1.size != img2.size:
+            messagebox.showerror("Error", "Input images must have the same dimensions.")
+            return
+        
+        # Clear previous second image selection
+        if self.second_image_label:
+            self.second_image_label.destroy()
+            self.second_image_label = None
+        
         # Display the second image
         self.display_second_image(second_image_path)
 
@@ -121,13 +134,18 @@ class ImageInspectorApp(tk.Tk):
         # Convert PIL image to ImageTk.PhotoImage
         result_photo = ImageTk.PhotoImage(result_image_pil)
 
-        # Display or update the comparison result image in the GUI
-        if hasattr(self, 'comparison_result_label'):
+        # Check if the comparison result label already exists
+        if hasattr(self, 'comparison_result_label') and self.comparison_result_label.winfo_exists():
+            # Update the existing label's image
             self.comparison_result_label.configure(image=result_photo)
+            self.comparison_result_label.image = result_photo  # Update the reference
         else:
+            # Create a new label for displaying the comparison result image
             self.comparison_result_label = tk.Label(self.right_frame, image=result_photo)
-            self.comparison_result_label.image = result_photo  # Keep a reference
             self.comparison_result_label.pack()
+
+        # Ensure the updated or new image is kept by setting it as an attribute of the label
+        self.comparison_result_label.image = result_photo
 
     def display_image(self, file_path):
         img = Image.open(file_path)
@@ -152,11 +170,13 @@ class ImageInspectorApp(tk.Tk):
         img_tk = ImageTk.PhotoImage(img)
 
         # Display or update the second image in the GUI
-        if hasattr(self, 'second_image_label'):
+        if self.second_image_label:
             self.second_image_label.configure(image=img_tk)
         else:
             self.second_image_label = tk.Label(self.left_frame, image=img_tk)
             self.second_image_label.pack(side="top", fill="both", expand=True)
+
+        # Keep a reference to the new image to prevent garbage-collection
         self.second_image_label.image = img_tk  # Keep a reference to prevent garbage-collection
 
     def encode(self):
@@ -228,7 +248,7 @@ class ImageInspectorApp(tk.Tk):
         
     def show_map(self, lat, lon):
         api_key = self.api_key  # Replace with your actual Geoapify API key in the config.ini file
-        zoom_level = simpledialog.askstring("Zoom Level", "Enter the zoom level (1-20):", initialvalue=self.zoom_level)
+        zoom_level = simpledialog.askstring("Zoom Level", "Enter map zoom level (1-20):", initialvalue=self.zoom_level)
         if zoom_level:
             self.zoom_level = zoom_level
         # Construct the request URL for Geoapify Static Maps API
@@ -270,19 +290,20 @@ class ImageInspectorApp(tk.Tk):
         else:
             messagebox.showerror("Error", "Image path is required.")
 
-    def clear_gui_elements(self):
-        # Clear output text where PGP keys, maps, or messages are displayed
+    def clear_gui_elements(self, clear_images=True):
         self.output_text.delete('1.0', tk.END)
     
-        # Remove the map image if it exists
-        if hasattr(self, 'map_label') and self.map_label.winfo_exists():
-            self.map_label.destroy()
+        if clear_images:
+            if hasattr(self, 'map_label') and self.map_label.winfo_exists():
+                self.map_label.destroy()
 
-        if hasattr(self, 'comparison_result_label') and self.comparison_result_label.winfo_exists():
-            self.comparison_result_label.destroy()
+            if hasattr(self, 'comparison_result_label') and self.comparison_result_label.winfo_exists():
+                self.comparison_result_label.destroy()
 
-        if hasattr(self, 'second_image_label') and self.second_image_label.winfo_exists():
-            self.second_image_label.destroy()
+            if hasattr(self, 'second_image_label') and self.second_image_label is not None and self.second_image_label.winfo_exists():
+                self.second_image_label.destroy()
+
+        
 
     def clear_map_display(self):
      # Check if the map_label exists and is displayed, then hide or destroy it

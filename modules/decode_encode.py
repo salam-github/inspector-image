@@ -63,12 +63,12 @@ def encode_message(image_path, message, output_image_path=None):
     
     if intermediate_image_path:
         os.remove(intermediate_image_path)
-    return "Failed to encode the entire message."
+        return "Failed to encode the entire message."
     
     # Delete the intermediate PNG if no message was fully encoded
     if intermediate_image_path:
         os.remove(intermediate_image_path)
-    return "Failed to encode the entire message."
+        return "Failed to encode the entire message."
 
 def decode_message(image_path):
     img = Image.open(image_path)
