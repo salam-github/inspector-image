@@ -163,7 +163,6 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 image_encoded.jpeg
-config1.ini
 resources/IMG_5388.jpeg
 resources/IMG_2431.jpeg
 resources/IMG_2363.jpeg
@@ -179,3 +178,4 @@ resources/IMG_2065.jpg
 resources/IMG_3858.jpg
 resources/IMG_3961.JPG
 resources/IMG_5388.jpg
+config.ini
