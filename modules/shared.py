@@ -1,7 +1,7 @@
 import piexif
 from PIL import Image, ExifTags
 import cv2
-import numpy as np
+#import numpy as np
 from skimage.metrics import structural_similarity as ssim
 
 
